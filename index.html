@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>traders.investments</title>
+<meta name="description" content="traders.investments">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0f14'/%3E%3Cpath d='M5 22 L12 15 L17 19 L27 8' stroke='%2334d399' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07090d;
+    --fg: #e8edf2;
+    --muted: #6b7785;
+    --accent: #34d399;
+    --accent-2: #22d3ee;
+    --grid: rgba(255,255,255,0.035);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .glow {
+    position: fixed; left: 50%; top: 50%;
+    width: min(900px, 140vw); aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(52,211,153,0.13) 0%, rgba(34,211,238,0.05) 35%, transparent 65%);
+    animation: breathe 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: .7; transform: translate(-50%, -50%) scale(1); }
+    50%      { opacity: 1;  transform: translate(-50%, -50%) scale(1.08); }
+  }
+
+  .vignette {
+    position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.75) 100%);
+  }
+
+  main {
+    position: relative; z-index: 2;
+    height: 100%;
+    display: grid; place-items: center;
+    padding: 0 16px;
+    text-align: center;
+  }
+
+  h1 {
+    font-weight: 500;
+    font-size: clamp(2rem, 7.5vw, 6rem);
+    letter-spacing: -0.035em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  h1 span {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.4em);
+    filter: blur(8px);
+    animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  h1 .dot { color: var(--accent); }
+  h1 .tld {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+    background-size: 200% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards, shimmer 6s linear 1.5s infinite;
+  }
+  @keyframes rise { to { opacity: 1; transform: none; filter: none; } }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .line {
+    width: 0; height: 1px; margin: 2rem auto 0;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: grow 1.4s cubic-bezier(.2,.7,.2,1) 1.2s forwards;
+  }
+  @keyframes grow { to { width: min(320px, 60vw); } }
+
+  .pulse {
+    display: inline-flex; align-items: center; gap: .6rem;
+    margin-top: 1.6rem;
+    font-size: .75rem; letter-spacing: .35em; text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0; animation: fade 1s ease 2s forwards;
+  }
+  .pulse i {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 rgba(52,211,153,.6);
+    animation: ping 2s ease-out infinite;
+  }
+  @keyframes ping {
+    0%   { box-shadow: 0 0 0 0 rgba(52,211,153,.55); }
+    100% { box-shadow: 0 0 0 12px rgba(52,211,153,0); }
+  }
+  @keyframes fade { to { opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="glow"></div>
+  <div class="vignette"></div>
+
+  <main>
+    <div>
+      <h1 id="name" aria-label="traders.investments"></h1>
+      <div class="line"></div>
+      <div class="pulse"><i></i>Coming soon</div>
+    </div>
+  </main>
+
+<script>
+  // Letter-by-letter title
+  (function () {
+    const h1 = document.getElementById('name');
+    const parts = [['traders', ''], ['.', 'dot'], ['investments', 'tld']];
+    let delay = 0;
+    parts.forEach(([text, cls]) => {
+      if (cls === 'tld') {
+        const s = document.createElement('span');
+        s.className = cls; s.textContent = text;
+        s.style.animationDelay = delay + 's, ' + (delay + 1.5) + 's';
+        s.setAttribute('aria-hidden', 'true');
+        h1.appendChild(s);
+        return;
+      }
+      [...text].forEach(ch => {
+        const s = document.createElement('span');
+        s.textContent = ch; if (cls) s.className = cls;
+        s.style.animationDelay = delay + 's';
+        s.setAttribute('aria-hidden', 'true');
+        h1.appendChild(s);
+        delay += 0.05;
+      });
+    });
+  })();
+
+  // Background: grid + drifting abstract market lines + rising candles
+  (function () {
+    const c = document.getElementById('c');
+    const ctx = c.getContext('2d');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let W, H, dpr, lines, candles;
+
+    function noise(seed) {
+      // smooth pseudo-random walk generator
+      let v = 0, vel = 0;
+      return () => { vel += (Math.random() - 0.5) * 0.6; vel *= 0.9; v += vel; v *= 0.995; return v; };
+    }
+
+    function init() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = c.width = innerWidth * dpr;
+      H = c.height = innerHeight * dpr;
+      lines = [
+        { color: 'rgba(52,211,153,', alpha: .35, y: .62, amp: 30, speed: .6 },
+        { color: 'rgba(34,211,238,', alpha: .18, y: .7,  amp: 45, speed: .4 },
+        { color: 'rgba(255,255,255,', alpha: .06, y: .55, amp: 60, speed: .25 },
+      ].map(l => {
+        const n = noise();
+        const step = 6 * dpr;
+        const pts = [];
+        for (let x = 0; x <= W + step; x += step) pts.push(n());
+        return { ...l, n, step, pts, offset: 0 };
+      });
+      candles = [];
+    }
+
+    function drawGrid() {
+      const s = 64 * dpr;
+      ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < W; x += s) { ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, H); }
+      for (let y = 0; y < H; y += s) { ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); }
+      ctx.stroke();
+    }
+
+    function drawLine(l) {
+      const base = H * l.y;
+      ctx.beginPath();
+      for (let i = 0; i < l.pts.length; i++) {
+        const x = i * l.step - l.offset;
+        const y = base + l.pts[i] * l.amp * dpr * 0.15;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.strokeStyle = l.color + l.alpha + ')';
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.stroke();
+
+      // soft fill below
+      ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+      const g = ctx.createLinearGradient(0, base - 80 * dpr, 0, H);
+      g.addColorStop(0, l.color + (l.alpha * 0.25) + ')');
+      g.addColorStop(1, l.color + '0)');
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+
+    function stepLine(l) {
+      l.offset += l.speed * dpr;
+      while (l.offset >= l.step) { l.offset -= l.step; l.pts.shift(); l.pts.push(l.n()); }
+    }
+
+    function spawnCandle() {
+      const up = Math.random() > 0.4;
+      candles.push({
+        x: Math.random() * W,
+        y: H + 40 * dpr,
+        h: (10 + Math.random() * 40) * dpr,
+        w: (3 + Math.random() * 4) * dpr,
+        v: (0.2 + Math.random() * 0.5) * dpr,
+        a: 0,
+        up
+      });
+    }
+
+    function drawCandles() {
+      if (Math.random() < 0.08 && candles.length < 40) spawnCandle();
+      candles.forEach(k => {
+        k.y -= k.v;
+        const life = 1 - k.y / H;
+        k.a = Math.min(1, life * 3) * Math.max(0, 1 - life) * 0.35;
+        ctx.fillStyle = (k.up ? 'rgba(52,211,153,' : 'rgba(248,113,113,') + k.a + ')';
+        ctx.fillRect(k.x, k.y, k.w, k.h);
+        ctx.fillRect(k.x + k.w / 2 - 0.5 * dpr, k.y - k.h * 0.4, 1 * dpr, k.h * 1.8);
+      });
+      candles = candles.filter(k => k.y + k.h > -50);
+    }
+
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      drawGrid();
+      drawCandles();
+      lines.forEach(l => { drawLine(l); if (!reduce) stepLine(l); });
+      if (!reduce) requestAnimationFrame(frame);
+    }
+
+    addEventListener('resize', init);
+    init();
+    frame();
+  })();
+</script>
+</body>
+</html>
